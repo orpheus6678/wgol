@@ -1,4 +1,5 @@
 {
   "editor.formatOnSave": true,
+  "scm.diffDecorationsGutterVisibility": "hover",
   "biome.configurationPath": "www/biome.json"
 }
