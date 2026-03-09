@@ -1,7 +1,7 @@
 mod utils;
 
 #[cfg(debug_assertions)]
-use utils::log;
+use utils::{log, Timer};
 
 use std::fmt;
 
@@ -102,6 +102,8 @@ impl Universe {
   }
 
   pub fn tick(&mut self) {
+    #[cfg(debug_assertions)]
+    let _timer = Timer::new("Universe::tick");
     let mut next = self.cells.clone();
 
     for row in 0..self.height {

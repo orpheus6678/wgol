@@ -38,10 +38,30 @@ const drawCells = () => {
   const cells = new Uint8Array(memory.buffer, cellsPtr, width * height)
   ctx.beginPath()
 
+  // draw all live cells in one pass and all dead cells in another
+  // to minimize calls to `CanvasRenderingContext2D.fillStyle`
+  // profiling has shown this setter to be a performance bottleneck
+
+  ctx.fillStyle = ALIVE_COLOR
   for (let row = 0; row < height; row++) {
     for (let col = 0; col < width; col++) {
       const idx = getIndex(row, col)
-      ctx.fillStyle = cells[idx] === Cell.Dead ? DEAD_COLOR : ALIVE_COLOR
+      if (cells[idx] !== Cell.Alive) continue
+
+      ctx.fillRect(
+        col * (CELL_SIZE + 1) + 1,
+        row * (CELL_SIZE + 1) + 1,
+        CELL_SIZE,
+        CELL_SIZE,
+      )
+    }
+  }
+
+  ctx.fillStyle = DEAD_COLOR
+  for (let row = 0; row < height; row++) {
+    for (let col = 0; col < width; col++) {
+      const idx = getIndex(row, col)
+      if (cells[idx] !== Cell.Dead) continue
 
       ctx.fillRect(
         col * (CELL_SIZE + 1) + 1,
@@ -54,7 +74,42 @@ const drawCells = () => {
   ctx.stroke()
 }
 
+const fps = {
+  fps: document.getElementById("fps"),
+  frames: [],
+  lastFrameTimeStamp: performance.now(),
+
+  render() {
+    const now = performance.now()
+    const delta = now - this.lastFrameTimeStamp // milisecs
+    this.lastFrameTimeStamp = now
+    const fps = (1 / delta) * 1000
+    this.frames.push(fps)
+    if (this.frames.length > 100) this.frames.shift()
+
+    let min = Infinity
+    let max = -Infinity
+    let sum = 0
+
+    for (let i = 0; i < this.frames.length; i++) {
+      sum += this.frames[i]
+      min = Math.min(this.frames[i], min)
+      max = Math.max(this.frames[i], max)
+    }
+
+    const mean = sum / this.frames.length
+    this.fps.textContent = `\
+frames per second:
+         latest = ${Math.round(fps)}
+avg of last 100 = ${Math.round(mean)}
+min of last 100 = ${Math.round(min)}
+max of last 100 = ${Math.round(max)}
+`
+  },
+}
+
 const renderLoop = () => {
+  fps.render()
   universe.tick()
   drawGrid()
   drawCells()
