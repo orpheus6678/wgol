@@ -11,13 +11,27 @@
         width: 100%;
         height: 100%;
         display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
+        gap: 1em;
+      }
+
+      button {
+        height: 2.5em;
+        width: 2.5em;
+        text-align: center;
+      }
+
+      #fps {
+        white-space: pre;
+        font-family: monospace;
       }
     </style>
   </head>
   <body>
     <noscript>this page contains webassembly and javascript content, please enable javascript in your browser.</noscript>
+    <button type="button" id="play-pause"></button>
     <canvas id="wgol-canvas"></canvas>
     <script src="./bootstrap.js"></script>
   </body>
