@@ -9,13 +9,17 @@ const ALIVE_COLOR = "#000000"
 const universe = Universe.new()
 const width = universe.width()
 const height = universe.height()
+let animationId = null
 
 const canvas = document.getElementById("wgol-canvas")
+const playPauseButton = document.getElementById("play-pause")
+
 canvas.height = (CELL_SIZE + 1) * height + 1
 canvas.width = (CELL_SIZE + 1) * width + 1
-
 const ctx = canvas.getContext("2d")
+
 const getIndex = (row, column) => row * width + column
+const isPaused = () => animationId === null
 
 const drawGrid = () => {
   ctx.beginPath()
@@ -54,13 +58,42 @@ const drawCells = () => {
   ctx.stroke()
 }
 
+const play = () => {
+  playPauseButton.textContent = "⏸"
+  renderLoop()
+}
+
+const pause = () => {
+  playPauseButton.textContent = "▶"
+  cancelAnimationFrame(animationId)
+  animationId = null
+}
+
+playPauseButton.addEventListener("click", () => (isPaused() ? play() : pause()))
+
+canvas.addEventListener("click", (event) => {
+  const boundary = canvas.getBoundingClientRect()
+  const scaleX = canvas.width / boundary.width
+  const scaleY = canvas.height / boundary.height
+  const canvasLeft = (event.clientX - boundary.left) * scaleX
+  const canvasTop = (event.clientY - boundary.top) * scaleY
+
+  const row = Math.min(Math.floor(canvasTop / (CELL_SIZE + 1)), height - 1)
+  const col = Math.min(Math.floor(canvasLeft / (CELL_SIZE + 1)), width - 1)
+  universe.toggle_cell(row, col)
+
+  drawGrid()
+  drawCells()
+})
+
 const renderLoop = () => {
   universe.tick()
   drawGrid()
   drawCells()
-  requestAnimationFrame(renderLoop)
+  animationId = requestAnimationFrame(renderLoop)
 }
 
-drawGrid()
-drawCells()
-requestAnimationFrame(renderLoop)
+// start in "playing" state and
+// skip the initial generation
+// this behavior might be undesired
+play()
